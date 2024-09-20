@@ -16,6 +16,9 @@ jobs:
           - platform: windows
             os: windows-latest
             arch: amd64
+          - platform: windows
+            os: windows-latest
+            arch: arm64
           - platform: linux
             os: ubuntu-latest
             arch: amd64
@@ -34,7 +37,6 @@ jobs:
           msystem: mingw64
           install: mingw-w64-x86_64-gcc
           update: true
-
 
       - name: Set Mingw64 Env
         if: startsWith(matrix.platform,'windows')
@@ -76,7 +78,6 @@ jobs:
           echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> android/local.properties
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/local.properties
 
-
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -104,7 +105,6 @@ jobs:
           path: ./dist
           retention-days: 1
           overwrite: true
-
 
   upload-release:
     if: ${{ !contains(github.ref, '+') }}
@@ -135,7 +135,6 @@ jobs:
             echo -e "\n\n<details markdown=1><summary>All changes from $current to the latest commit:</summary>\n\n" >> release.md
             gitchangelog "${pre}.." >> release.md 2>&1 || echo "Error in gitchangelog"
             echo -e "\n\n</details>" >> release.md
-          fi
 
       - name: Release
         uses: softprops/action-gh-release@v2
@@ -147,18 +146,3 @@ jobs:
         run: |
           mkdir -p ./tmp
           cp ./dist/*android-arm64-v8a* ./tmp/ || true
-          echo "Files copied successfully"
-
-      - name: Push to fdroid repo
-        uses: cpina/github-action-push-to-another-repository@v1.7.2
-        env:
-          SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
-        with:
-          source-directory: ./tmp/
-          destination-github-username: chen08209
-          destination-repository-name: FlClash-fdroid-repo
-          user-name: 'github-actions[bot]'
-          user-email: 'github-actions[bot]@users.noreply.github.com'
-          target-branch: action-pr
-          commit-message: Update from ${{ github.ref_name }}
-          target-directory: /tmp/
